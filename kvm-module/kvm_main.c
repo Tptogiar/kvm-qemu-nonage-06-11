@@ -400,7 +400,7 @@ static struct kvm_vcpu *__vcpu_load(struct kvm_vcpu *vcpu)
 
 	cpu = get_cpu();
 
-	if (vcpu->cpu != cpu) {
+	if (vcpu->cpu != cpu) {   // vcpu 刚create出来的时候vcpu->cpu=-1
 		smp_call_function(__vcpu_clear, vcpu, 0, 1);
 		vcpu->launched = 0;
 	}
@@ -409,14 +409,20 @@ static struct kvm_vcpu *__vcpu_load(struct kvm_vcpu *vcpu)
 		u8 error;
 
 		per_cpu(current_vmcs, cpu) = vcpu->vmcs;
-		asm volatile ("vmptrld %1; setna %0"
+		// From: Inter volume 3 25.1
+		// The memory operand of the VMPTRLD instruction is the address of a VMCS. 
+		// After execution of the instruction, that VMCS is both active 
+		// and current on the logical processor. Any other VMCS that 
+		// had been active remains so, but no other VMCS is current.
+		// logical processor 物理CPU
+		asm volatile ("vmptrld %1; setna %0"              
 			       : "=m"(error) : "m"(phys_addr) : "cc" );
 		if (error)
 			printk(KERN_ERR "kvm: vmptrld %p/%llx fail\n",
 			       vcpu->vmcs, phys_addr);
 	}
 
-	if (vcpu->cpu != cpu) {
+	if (vcpu->cpu != cpu) {       
 		struct descriptor_table dt;
 		unsigned long sysenter_esp;
 
@@ -425,6 +431,7 @@ static struct kvm_vcpu *__vcpu_load(struct kvm_vcpu *vcpu)
 		 * Linux uses per-cpu TSS and GDT, so set these when switching
 		 * processors.
 		 */
+		// linux没有为每一个进程都准备一个tss段，而是每一个cpu使用一个tss段
 		vmcs_writel(HOST_TR_BASE, read_tr_base()); /* 22.2.4 */
 		get_gdt(&dt);
 		vmcs_writel(HOST_GDTR_BASE, dt.base);   /* 22.2.4 */
@@ -438,7 +445,7 @@ static struct kvm_vcpu *__vcpu_load(struct kvm_vcpu *vcpu)
 /*
  * Switches to specified vcpu, until a matching vcpu_put()
  */
-static struct kvm_vcpu *vcpu_load(struct kvm *kvm, int vcpu_slot)   // 加在vcpu的上下文到物理cpu
+static struct kvm_vcpu *vcpu_load(struct kvm *kvm, int vcpu_slot)   // 加载vcpu的上下文到物理cpu
 {
 	struct kvm_vcpu *vcpu = &kvm->vcpus[vcpu_slot];
 
@@ -1097,7 +1104,7 @@ static void vmcs_write32_fixedbits(u32 msr, u32 vmcs_field, u32 val)
 }
 
 /*
- * Sets up the vmcs for emulated real mode.
+ * Sets up the vmcs for emulated real mode.  // 以实模式启动，哈哈哈
  */
 static int kvm_vcpu_setup(struct kvm_vcpu *vcpu)
 {
@@ -1373,7 +1380,7 @@ static int kvm_dev_ioctl_create_vcpu(struct kvm *kvm, int n)
 	vcpu->vmcs = vmcs;
 	vcpu->launched = 0;
 
-	__vcpu_load(vcpu);
+	__vcpu_load(vcpu);  // 第一次create vcpu，还没有其他线程会使用，所以不需要lock vcpu
 
 	r = kvm_vcpu_setup(vcpu);
 

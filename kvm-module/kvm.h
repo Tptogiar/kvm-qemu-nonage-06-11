@@ -155,7 +155,7 @@ struct kvm_vcpu {
 	struct vmcs *vmcs;
 	struct mutex mutex;
 	int   cpu;   // 用于识别正在运行的虚拟机所分配的物理CPU核心的标识符
-	int   launched;
+	int   launched;  // 记录一个虚拟 CPU 是否已经被启动并运行
 	unsigned long irq_summary; /* bit vector: 1 per word in irq_pending */
 #define NR_IRQ_WORDS (256 / BITS_PER_LONG)
 	unsigned long irq_pending[NR_IRQ_WORDS];

@@ -59,7 +59,7 @@ enum vmcs_field {
 	GUEST_GS_SELECTOR               = 0x0000080a,
 	GUEST_LDTR_SELECTOR             = 0x0000080c,
 	GUEST_TR_SELECTOR               = 0x0000080e,
-	HOST_ES_SELECTOR                = 0x00000c00,
+	HOST_ES_SELECTOR                = 0x00000c00, // Table B-3.  Encodings for 16-Bit Host-State Fields 
 	HOST_CS_SELECTOR                = 0x00000c02,
 	HOST_SS_SELECTOR                = 0x00000c04,
 	HOST_DS_SELECTOR                = 0x00000c06,
@@ -162,7 +162,7 @@ enum vmcs_field {
 	GUEST_PENDING_DBG_EXCEPTIONS    = 0x00006822,
 	GUEST_SYSENTER_ESP              = 0x00006824,
 	GUEST_SYSENTER_EIP              = 0x00006826,
-	HOST_CR0                        = 0x00006c00,
+	HOST_CR0                        = 0x00006c00,   // Table B-15.  Encodings for Natural-Width Host-State Fields
 	HOST_CR3                        = 0x00006c02,
 	HOST_CR4                        = 0x00006c04,
 	HOST_FS_BASE                    = 0x00006c06,
